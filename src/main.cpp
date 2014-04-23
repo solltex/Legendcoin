@@ -45,7 +45,7 @@ unsigned int nStakeMinAge = 60 * 60 * 24 * 2;	// minimum age for coin age: 2d
 unsigned int nStakeMaxAge = -1;	// stake age of full weight: -1
 unsigned int nStakeTargetSpacing = 90;			// 90 sec block spacing
 
-int64 nChainStartTime = 1397948186;
+int64 nChainStartTime = 1398249577;
 int nCoinbaseMaturity = 350;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -68,7 +68,7 @@ map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "legendcoin Signed Message:\n";
+const string strMessageMagic = "Legendcoin Signed Message:\n";
 
 double dHashesPerSec;
 int64 nHPSTimerStart;
@@ -941,7 +941,7 @@ static const int CUTOFF_HEIGHT = 10000;	// Height at the end of 5 weeks
 // miner's coin base reward based on nBits
 int64 GetProofOfWorkReward(int nHeight, int64 nFees, uint256 prevHash)
 {
-	int64 nSubsidy = 50000 * COIN;
+	int64 nSubsidy = 30000 * COIN;
 
     std::string cseed_str = prevHash.ToString().substr(14,7);
     const char* cseed = cseed_str.c_str();
@@ -1519,8 +1519,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes in their
     // initial block download.
-    bool fEnforceBIP30 = true; // Always active in legendcoin
-    bool fStrictPayToScriptHash = true; // Always active in legendcoin
+    bool fEnforceBIP30 = true; // Always active in Legendcoin
+    bool fStrictPayToScriptHash = true; // Always active in Legendcoin
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos;
@@ -2468,7 +2468,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low!");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "legendcoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        uiInterface.ThreadSafeMessageBox(strMessage, "Legendcoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
         StartShutdown();
         return false;
     }
@@ -2574,9 +2574,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1397948186;
+        block.nTime    = 1398249577;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 628646;
+        block.nNonce   = 377213;
         if (true  && (block.GetHash() != hashGenesisBlock)) {
 
         // This will figure out a valid hash and Nonce if you're
@@ -2599,7 +2599,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("block.nTime = %u \n", block.nTime);
         printf("block.nNonce = %u \n", block.nNonce);
 
-        assert(block.hashMerkleRoot == uint256("99b06e01fc410c3eab84b5ff1243d56ef2a8d0419e3a4b6bb0a388bd20c0a645"));
+        assert(block.hashMerkleRoot == uint256("a1da1b11fe911248c7cfac42842d2382411cf446a7e4efe61bfeefb55a640c83"));
 		assert(block.GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
 
         // Start new block file
