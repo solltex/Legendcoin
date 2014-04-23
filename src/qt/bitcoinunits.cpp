@@ -45,9 +45,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("LEGEND");
-    case mBTC: return QString("Milli-LEGEND (1 / 1,000)");
-    case uBTC: return QString("Micro-LEGEND (1 / 1,000,000)");
+    case BTC: return QString("LegendCoins");
+    case mBTC: return QString("Milli-LegendCoins (1 / 1,000)");
+    case uBTC: return QString("Micro-LegendCoins (1 / 1,000,000)");
     default: return QString("???");
     }
 }

@@ -302,16 +302,16 @@ void ThreadIRCSeed2(void* parg)
         }
 
         if (fTestNet) {
-            Send(hSocket, "JOIN #LegendcoinTEST2\r");
-            Send(hSocket, "WHO #LegendcoinTEST2\r");
+            Send(hSocket, "JOIN #LegendCoinTEST2\r");
+            Send(hSocket, "WHO #LegendCoinTEST2\r");
         } else {
-            // randomly join #Legendcoin00-#Legendcoin05
+            // randomly join #LegendCoin00-#LegendCoin05
             // int channel_number = GetRandInt(5);
 
             // Channel number is always 0 for initial release
             int channel_number = 0;
-            Send(hSocket, strprintf("JOIN #Legendcoin%02d\r", channel_number).c_str());
-            Send(hSocket, strprintf("WHO #Legendcoin%02d\r", channel_number).c_str());
+            Send(hSocket, strprintf("JOIN #LegendCoin%02d\r", channel_number).c_str());
+            Send(hSocket, strprintf("WHO #LegendCoin%02d\r", channel_number).c_str());
         }
 
         int64 nStart = GetTime();

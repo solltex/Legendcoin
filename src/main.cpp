@@ -41,12 +41,12 @@ static CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 static CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 20);
 static CBigNum bnProofOfStakeLimitTestNet(~uint256(0) >> 20);
 
-unsigned int nStakeMinAge = 60 * 60 * 24 * 2;	// minimum age for coin age: 2d
-unsigned int nStakeMaxAge = -1;	// stake age of full weight: -1
-unsigned int nStakeTargetSpacing = 90;			// 90 sec block spacing
+unsigned int nStakeMinAge = 60 * 60 * 24 * 20;	// minimum age for coin age: 20d
+unsigned int nStakeMaxAge = 60 * 60 * 24 * 40;	// stake age of full weight: 40d
+unsigned int nStakeTargetSpacing = 30;			// 30 sec block spacing
 
-int64 nChainStartTime = 1398249577;
-int nCoinbaseMaturity = 350;
+int64 nChainStartTime = 1398283434;
+int nCoinbaseMaturity = 20;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainTrust = 0;
@@ -68,7 +68,7 @@ map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Legendcoin Signed Message:\n";
+const string strMessageMagic = "LegendCoin Signed Message:\n";
 
 double dHashesPerSec;
 int64 nHPSTimerStart;
@@ -936,43 +936,38 @@ int generateMTRandom(unsigned int s, int range)
 
 
 
-static const int64 nMinSubsidy = 10 * COIN;
-static const int CUTOFF_HEIGHT = 10000;	// Height at the end of 5 weeks
+static const int64 nMinSubsidy = 1 * COIN;
+static const int CUTOFF_HEIGHT = 161280;	// Height at the end of 5 weeks
 // miner's coin base reward based on nBits
 int64 GetProofOfWorkReward(int nHeight, int64 nFees, uint256 prevHash)
 {
-	int64 nSubsidy = 30000 * COIN;
-
-    std::string cseed_str = prevHash.ToString().substr(14,7);
-    const char* cseed = cseed_str.c_str();
-    long seed = hex2long(cseed);
-    int rand = generateMTRandom(seed, 8000);
-    
+	int64 nSubsidy = 1000 * COIN;
 
 	if(nHeight == 1)
 	{
 		nSubsidy = TAX_PERCENTAGE * CIRCULATION_MONEY;
 		return nSubsidy + nFees;
 	}
-    else if(nHeight == 2)
-    {
-        nSubsidy = rand * COIN;
-    }
     
 	else if(nHeight > CUTOFF_HEIGHT)
 	{
 		return nMinSubsidy + nFees;
 	}
 
-	
+	std::string cseed_str = prevHash.ToString().substr(14,7);
+	const char* cseed = cseed_str.c_str();
+	long seed = hex2long(cseed);
+	nSubsidy += generateMTRandom(seed, 8000) * COIN;
      
 
+	// Subsidy is cut in half every week or 10080 blocks, which will occur approximately every month
+	nSubsidy >>= (nHeight / 20160); 
     return nSubsidy + nFees;
 }
 
 // miner's coin stake reward based on nBits and coin age spent (coin-days)
 // simple algorithm, not depend on the diff
-const int YEARLY_BLOCKCOUNT = 350400;	// 365 * 2880
+const int YEARLY_BLOCKCOUNT = 1051200;	// 365 * 2880
 int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTime, int nHeight)
 {
     int64 nRewardCoinYear;
@@ -980,11 +975,11 @@ int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTi
 	nRewardCoinYear = MAX_MINT_PROOF_OF_STAKE;
 
 	if(nHeight < 2 * YEARLY_BLOCKCOUNT)
-		nRewardCoinYear = 1 * MAX_MINT_PROOF_OF_STAKE;
+		nRewardCoinYear = 4 * MAX_MINT_PROOF_OF_STAKE;
 	else if(nHeight < (4 * YEARLY_BLOCKCOUNT))
-		nRewardCoinYear = 1 * MAX_MINT_PROOF_OF_STAKE;
-	else if(nHeight < (25 * YEARLY_BLOCKCOUNT))
-		nRewardCoinYear = 1 * MAX_MINT_PROOF_OF_STAKE;
+		nRewardCoinYear = 5 * MAX_MINT_PROOF_OF_STAKE;
+	else if(nHeight < (6 * YEARLY_BLOCKCOUNT))
+		nRewardCoinYear = 6 * MAX_MINT_PROOF_OF_STAKE;
 
     int64 nSubsidy = nCoinAge * nRewardCoinYear / 365;
 
@@ -1519,8 +1514,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes in their
     // initial block download.
-    bool fEnforceBIP30 = true; // Always active in Legendcoin
-    bool fStrictPayToScriptHash = true; // Always active in Legendcoin
+    bool fEnforceBIP30 = true; // Always active in LegendCoin
+    bool fStrictPayToScriptHash = true; // Always active in LegendCoin
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos;
@@ -2030,8 +2025,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
 
 	// blacklist block 38847 of old chain
 	// keep it for another version, can be removed once blockchain stablized
-	if (GetHash() == uint256("0x0000000138efd2ac0c90f8cd1c17cf29e07686f9108778d29b9e38228bdc502e"))
-    return error("CheckBlock() 38847: hash == 0000000138efd2ac0c90f8cd1c17cf29e07686f9108778d29b9e38228bdc502e");
 	 
     // Size limits
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
@@ -2468,7 +2461,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low!");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        uiInterface.ThreadSafeMessageBox(strMessage, "Legendcoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        uiInterface.ThreadSafeMessageBox(strMessage, "LegendCoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
         StartShutdown();
         return false;
     }
@@ -2530,10 +2523,10 @@ bool LoadBlockIndex(bool fAllowNew)
 {
     if (fTestNet)
     {
-        pchMessageStart[0] = 0xea;
-        pchMessageStart[1] = 0xce;
-        pchMessageStart[2] = 0xed;
-        pchMessageStart[3] = 0xcd;
+        pchMessageStart[0] = 0xed;
+        pchMessageStart[1] = 0xc2;
+        pchMessageStart[2] = 0xd0;
+        pchMessageStart[3] = 0xcf;
 
         bnProofOfStakeLimit = bnProofOfStakeLimitTestNet; // 0x00000fff PoS base target is fixed in testnet
         bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 0x0000ffff PoW base target is fixed in testnet
@@ -2561,7 +2554,7 @@ bool LoadBlockIndex(bool fAllowNew)
             return false;
 
         // Genesis block
-        const char* pszTimestamp = "I get knocked down but I get up again.";
+        const char* pszTimestamp = "Forget about it kid they are ghosts. In the middle of the night.";
         CTransaction txNew;
         txNew.nTime = nChainStartTime;
         txNew.vin.resize(1);
@@ -2574,9 +2567,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1398249577;
+        block.nTime    = 1398283434;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 377213;
+        block.nNonce   = 822658;
         if (true  && (block.GetHash() != hashGenesisBlock)) {
 
         // This will figure out a valid hash and Nonce if you're
@@ -2599,7 +2592,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("block.nTime = %u \n", block.nTime);
         printf("block.nNonce = %u \n", block.nNonce);
 
-        assert(block.hashMerkleRoot == uint256("a1da1b11fe911248c7cfac42842d2382411cf446a7e4efe61bfeefb55a640c83"));
+        assert(block.hashMerkleRoot == uint256("0x2ef0891a54a511e59372ff2e0583c3fe7f9eac835b9b137c3f7e328cbf12ad56"));
 		assert(block.GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
 
         // Start new block file
@@ -2887,7 +2880,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xfe, 0xf5, 0xab, 0xaa };
+unsigned char pchMessageStart[4] = { 0xde, 0xe5, 0xfb, 0x2a };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
